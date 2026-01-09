@@ -178,5 +178,10 @@
     "quote": "good lord @clawdbot is so good. within an hour of spinning it up, i had it monitoring my full integration and release workflow, watching the gh action, npm publish, etc end to end and alerting me when done!",
     "author": "shuv1337",
     "url": "https://x.com/shuv1337/status/2008118863205113899"
+  },
+  {
+    "quote": "I don't fall in love easily, but playing with @clawdbot today has been incredibly refreshing. It processed our entire source of truth by simply dumping text files into WhatsApp and responded in minutes, where RAG agents have struggled for days.",
+    "author": "pocarles",
+    "url": "https://x.com/pocarles/status/2007925850562531676"
   }
 ]
