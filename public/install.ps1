@@ -1,5 +1,10 @@
 # Clawdbot Installer for Windows
 # Usage: iwr -useb https://clawd.bot/install.ps1 | iex
+#        powershell -NoProfile -ExecutionPolicy Bypass -Command "& {$(iwr -useb https://clawd.bot/install.ps1)} -Tag beta"
+
+param(
+    [string]$Tag = "latest"
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -94,11 +99,14 @@ function Check-ExistingClawdbot {
 
 # Install Clawdbot
 function Install-Clawdbot {
-    Write-Host "[*] Installing Clawdbot..." -ForegroundColor Yellow
+    if ([string]::IsNullOrWhiteSpace($Tag)) {
+        $Tag = "latest"
+    }
+    Write-Host "[*] Installing Clawdbot@$Tag..." -ForegroundColor Yellow
     $prevLogLevel = $env:NPM_CONFIG_LOGLEVEL
     $env:NPM_CONFIG_LOGLEVEL = "error"
     try {
-        npm install -g clawdbot@latest
+        npm install -g "clawdbot@$Tag"
     } finally {
         $env:NPM_CONFIG_LOGLEVEL = $prevLogLevel
     }
