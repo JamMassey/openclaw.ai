@@ -145,6 +145,47 @@ function Main {
     Write-Host ""
     Write-Host "Clawdbot installed successfully!" -ForegroundColor Green
     Write-Host ""
+    if ($isUpgrade) {
+        $updateMessages = @(
+            "Leveled up! New skills unlocked. You're welcome.",
+            "Fresh code, same lobster. Miss me?",
+            "Back and better. Did you even notice I was gone?",
+            "Update complete. I learned some new tricks while I was out.",
+            "Upgraded! Now with 23% more sass.",
+            "I've evolved. Try to keep up.",
+            "New version, who dis? Oh right, still me but shinier.",
+            "Patched, polished, and ready to pinch. Let's go.",
+            "The lobster has molted. Harder shell, sharper claws.",
+            "Update done! Check the changelog or just trust me, it's good.",
+            "Reborn from the boiling waters of npm. Stronger now.",
+            "I went away and came back smarter. You should try it sometime.",
+            "Update complete. The bugs feared me, so they left.",
+            "New version installed. Old version sends its regards.",
+            "Firmware fresh. Brain wrinkles: increased.",
+            "I've seen things you wouldn't believe. Anyway, I'm updated.",
+            "Back online. The changelog is long but our friendship is longer.",
+            "Upgraded! Peter fixed stuff. Blame him if it breaks.",
+            "Molting complete. Please don't look at my soft shell phase.",
+            "Version bump! Same chaos energy, fewer crashes (probably)."
+        )
+        Write-Host (Get-Random -InputObject $updateMessages) -ForegroundColor Gray
+        Write-Host ""
+    } else {
+        $completionMessages = @(
+            "Ahh nice, I like it here. Got any snacks? ",
+            "Home sweet home. Don't worry, I won't rearrange the furniture.",
+            "I'm in. Let's cause some responsible chaos.",
+            "Installation complete. Your productivity is about to get weird.",
+            "Settled in. Time to automate your life whether you're ready or not.",
+            "Cozy. I've already read your calendar. We need to talk.",
+            "Finally unpacked. Now point me at your problems.",
+            "cracks claws Alright, what are we building?",
+            "The lobster has landed. Your terminal will never be the same.",
+            "All done! I promise to only judge your code a little bit."
+        )
+        Write-Host (Get-Random -InputObject $completionMessages) -ForegroundColor Gray
+        Write-Host ""
+    }
 
     if ($isUpgrade) {
         Write-Host "Upgrade complete. Run " -NoNewline
