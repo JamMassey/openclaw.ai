@@ -277,9 +277,11 @@ const duration2 = (row2.length / 2 * pixelsPerItem) / pixelsPerSecond;
         pnpm: 'pnpm add -g clawdbot'
       };
 
+      const windowsCmd = 'iwr -useb https://clawd.bot/install.ps1 | iex';
+      const windowsBetaCmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "& {$(iwr -useb https://clawd.bot/install.ps1)} -Tag beta"';
       const osCmds = {
         unix: "curl -fsSL https://clawd.bot/install.sh | bash",
-        windows: 'iwr -useb https://clawd.bot/install.ps1 | iex'
+        windows: windowsCmd
       };
 
       const osLabels = {
@@ -351,13 +353,11 @@ const duration2 = (row2.length / 2 * pixelsPerItem) / pixelsPerSecond;
               ? "curl -fsSL https://clawd.bot/install.sh | bash -s -- --beta"
               : "curl -fsSL https://clawd.bot/install.sh | bash")
           : (currentBeta
-              ? 'iwr -useb https://clawd.bot/install.ps1 | iex -args "--beta"'
-              : 'iwr -useb https://clawd.bot/install.ps1 | iex');
+              ? windowsBetaCmd
+              : windowsCmd);
         document.querySelectorAll('.os-cmd').forEach(cmd => cmd.textContent = onelinerCmd);
         // Update hackable OS command for installer mode
-        const hackableOsCmd = currentOs === 'unix'
-          ? "curl -fsSL https://clawd.bot/install.sh | bash -s -- --install-method git"
-          : 'iwr -useb https://clawd.bot/install.ps1 | iex -args "--install-method git"';
+        const hackableOsCmd = "curl -fsSL https://clawd.bot/install.sh | bash -s -- --install-method git";
         document.querySelectorAll('.os-cmd-hackable').forEach(cmd => cmd.textContent = hackableOsCmd);
         // Update OS indicator text
         osDetected.textContent = osLabels[currentOs];
@@ -462,16 +462,14 @@ const duration2 = (row2.length / 2 * pixelsPerItem) / pixelsPerSecond;
               ? "curl -fsSL https://clawd.bot/install.sh | bash -s -- --beta"
               : "curl -fsSL https://clawd.bot/install.sh | bash")
           : (currentBeta
-              ? 'iwr -useb https://clawd.bot/install.ps1 | iex -args "--beta"'
-              : 'iwr -useb https://clawd.bot/install.ps1 | iex'),
+              ? windowsBetaCmd
+              : windowsCmd),
         'install': () => {
           const betaSuffix = currentBeta ? '@beta' : '';
           return currentPm === 'npm' ? `npm i -g clawdbot${betaSuffix}` : `pnpm add -g clawdbot${betaSuffix}`;
         },
         'onboard': () => 'clawdbot onboard',
-        'hackable-installer': () => currentOs === 'unix'
-          ? "curl -fsSL https://clawd.bot/install.sh | bash -s -- --install-method git"
-          : 'iwr -useb https://clawd.bot/install.ps1 | iex -args "--install-method git"',
+        'hackable-installer': () => "curl -fsSL https://clawd.bot/install.sh | bash -s -- --install-method git",
         'clone': () => 'git clone https://github.com/clawdbot/clawdbot.git',
         'build': () => 'cd clawdbot && pnpm install && pnpm run build',
         'hackable-onboard': () => 'pnpm run clawdbot onboard',
