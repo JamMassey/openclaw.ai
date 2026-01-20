@@ -10,53 +10,75 @@ else
   INSTALL_URL="https://clawd.bot/install.sh"
 fi
 
-npm_view() {
-  local out=""
-  local attempt=1
-  while [[ "$attempt" -le 3 ]]; do
-    if out="$(NPM_CONFIG_LOGLEVEL=error NPM_CONFIG_UPDATE_NOTIFIER=false \
-      NPM_CONFIG_FUND=false NPM_CONFIG_AUDIT=false \
-      npm view "$@" 2>/tmp/npm-view.err)"; then
-      printf '%s' "$out"
-      return 0
-    fi
-    sleep "$attempt"
-    attempt=$((attempt + 1))
-  done
-  cat /tmp/npm-view.err >&2
-  return 1
+fetch_registry_versions() {
+  node - <<'NODE'
+const https = require("node:https");
+
+const url = process.env.NPM_REGISTRY_URL || "https://registry.npmjs.org/clawdbot";
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function requestJson() {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, {
+      headers: { Accept: "application/vnd.npm.install-v1+json" }
+    }, (res) => {
+      if (res.statusCode !== 200) {
+        res.resume();
+        reject(new Error(`registry status ${res.statusCode}`));
+        return;
+      }
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    });
+    req.on("error", reject);
+  });
+}
+
+(async () => {
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const data = await requestJson();
+      const tags = data["dist-tags"] || {};
+      const time = data.time || {};
+      const versions = Object.entries(time)
+        .filter(([key]) => key !== "created" && key !== "modified")
+        .sort((a, b) => new Date(b[1]) - new Date(a[1]))
+        .map(([key]) => key);
+      const latest = tags.latest || versions[0] || "";
+      const next = tags.next || latest;
+      const previous = versions.find((v) => v !== next) || latest || next;
+      if (!latest) {
+        process.exit(1);
+      }
+      process.stdout.write(`${latest}\n${next}\n${previous}`);
+      return;
+    } catch (err) {
+      if (attempt === 3) {
+        console.error(err.message || err);
+        process.exit(1);
+      }
+      await delay(attempt * 500);
+    }
+  }
+})();
+NODE
 }
 
 echo "==> Resolve npm versions"
-LATEST_VERSION="$(npm_view clawdbot dist-tags.latest)"
-NEXT_VERSION="$(npm_view clawdbot dist-tags.next)"
-PREVIOUS_VERSION="$(NEXT_VERSION="$NEXT_VERSION" node - <<'NODE'
-const { execSync } = require("node:child_process");
-
-const versions = JSON.parse(execSync("npm view clawdbot versions --json", {
-  encoding: "utf8",
-  env: {
-    ...process.env,
-    NPM_CONFIG_LOGLEVEL: "error",
-    NPM_CONFIG_UPDATE_NOTIFIER: "false",
-    NPM_CONFIG_FUND: "false",
-    NPM_CONFIG_AUDIT: "false"
-  }
-}));
-if (!Array.isArray(versions) || versions.length === 0) {
-  process.exit(1);
-}
-
-const next = (process.env.NEXT_VERSION || "").trim();
-if (!next) {
-  process.exit(1);
-}
-
-const idx = versions.indexOf(next);
-const previous = idx > 0 ? versions[idx - 1] : (versions.length >= 2 ? versions[versions.length - 2] : versions[0]);
-process.stdout.write(previous);
-NODE
-)"
+REGISTRY_INFO="$(fetch_registry_versions)"
+LATEST_VERSION="$(printf '%s\n' "$REGISTRY_INFO" | sed -n '1p')"
+NEXT_VERSION="$(printf '%s\n' "$REGISTRY_INFO" | sed -n '2p')"
+PREVIOUS_VERSION="$(printf '%s\n' "$REGISTRY_INFO" | sed -n '3p')"
 
 echo "latest=$LATEST_VERSION next=$NEXT_VERSION previous=$PREVIOUS_VERSION"
 
