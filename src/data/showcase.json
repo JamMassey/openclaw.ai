@@ -541,5 +541,79 @@
     "images": [
       "https://pbs.twimg.com/media/G_AtTRsWIAA9vdL.jpg"
     ]
+  },
+  {
+    "id": "2013811099028557966",
+    "author": "astuyve",
+    "quote": "It may not be AGI, but Clawdbot is automatically negotiating with multiple dealers for my next car via browser, email, and imessage and it's amazing.",
+    "category": "automation",
+    "likes": 16,
+    "images": [
+      "https://pbs.twimg.com/media/G_J-F2FXcAAVFM_.jpg"
+    ]
+  },
+  {
+    "id": "2013645067441844697",
+    "author": "dreetje",
+    "quote": "My @clawdbot has managed to order things itself from @albertheijn (our supermarket) when our cleaning lady sent me a message.\n\nIt logged in using shared credentials in my @1Password, then waited for the old style text message MFA (read it through @beeper iMessage bridge using MCP). And placed the items in my basket!\n\nSo helpful.",
+    "category": "automation",
+    "likes": 119
+  },
+  {
+    "id": "2013650626962424047",
+    "author": "stevengonsalvez",
+    "quote": "Tracks my spends, books and tracks my kids lunch, scrum master with some motivation.\n\nTook screenshots for this tweet and asked it to blur out anything finance or personal - used imagemagick to work it out.\n\nOh and spins off codex's and claude's to fix code rabbits PR comments.",
+    "category": "productivity",
+    "likes": 1,
+    "images": [
+      "https://pbs.twimg.com/media/G_Hr5YwWkAkIS2_.jpg",
+      "https://pbs.twimg.com/media/G_Hr6zAXgAA_Iy_.jpg",
+      "https://pbs.twimg.com/media/G_Hr_mAWkAQCqzM.jpg"
+    ]
+  },
+  {
+    "id": "2013549390615715905",
+    "author": "nathanclark_",
+    "quote": "I've now got my @clawdbot across the writing system so he can trigger @droid exec to execute the writing pipeline.\n\nIt's Sassy the Sasquatch, IYKYK. Very Aussie reference.",
+    "category": "developer",
+    "likes": 1,
+    "images": [
+      "https://pbs.twimg.com/media/G_GP9HkWEAAXyTO.jpg"
+    ]
+  },
+  {
+    "id": "2013499715892006998",
+    "author": "_KevinTang",
+    "quote": "I have @clawdbot setup to look at Hacker News trending and send me links to articles it thinks I'd be interested in!\n\nPersonal content curation.",
+    "category": "automation",
+    "likes": 5,
+    "images": [
+      "https://pbs.twimg.com/media/G_FjTAnXAAEnCBc.jpg",
+      "https://pbs.twimg.com/media/G_FjTAmXUAAN4kC.jpg"
+    ]
+  },
+  {
+    "id": "2013388700479058068",
+    "author": "danpeguine",
+    "quote": "Today I asked @clawdbot to organize all my bloodworks lab results into a neat Notion database.",
+    "category": "automation",
+    "likes": 50,
+    "images": [
+      "https://pbs.twimg.com/media/G_D-NpmWIAA9WKF.jpg"
+    ]
+  },
+  {
+    "id": "2013257743004545257",
+    "author": "chrisrodz35",
+    "quote": "Kicking bad habits with @clawdbot.\n\nI like watching youtube videos but it's time I could spend producing instead of consuming.\n\nSetup a daily cron that summarizes new videos with key takeaways and actionable insights. Now I can get the learnings without the time sink!",
+    "category": "productivity",
+    "likes": 25
+  },
+  {
+    "id": "2013196232181637500",
+    "author": "christinetyip",
+    "quote": "I connected mine to an external memory layer - check out the shared-memory skill in clawdhub.\n\nClawdbot helps me build my second brain and selectively shares context and state with my partner's clawdbot.",
+    "category": "integration",
+    "likes": 1
   }
 ]
