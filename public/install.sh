@@ -614,25 +614,78 @@ require_sudo() {
     exit 1
 }
 
-install_git() {
-    echo -e "${WARN}→${NC} Installing Git..."
+ensure_swap() {
+    if [[ "$OS" != "linux" ]]; then
+        return 0
+    fi
+    # Only run in contexts where we can use sudo or are root
+    if [[ "$(id -u)" -ne 0 ]] && ! command -v sudo &>/dev/null; then
+        return 0
+    fi
+
+    # Check for existing swap
+    local has_swap
+    has_swap=$(swapon --show --noheadings 2>/dev/null | wc -l)
+    if [[ "$has_swap" -gt 0 ]]; then
+        return 0
+    fi
+
+    local mem_total
+    mem_total=$(grep MemTotal /proc/meminfo 2>/dev/null | awk '{print $2}')
+    # If < 2GB (approx 2000000 KB), create swap
+    if [[ -n "$mem_total" && "$mem_total" -lt 2000000 ]]; then
+        echo -e "${WARN}→${NC} Low memory detected (<2GB), checking for swap..."
+        require_sudo
+        
+        # Check if /swapfile exists but not enabled
+        if [[ -f /swapfile ]]; then
+             echo -e "${WARN}→${NC} Enabling existing /swapfile..."
+             maybe_sudo swapon /swapfile || true
+             return 0
+        fi
+
+        echo -e "${WARN}→${NC} Creating 2GB swapfile (required for build)..."
+        if ! maybe_sudo fallocate -l 2G /swapfile 2>/dev/null; then
+             maybe_sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
+        fi
+        
+        maybe_sudo chmod 600 /swapfile
+        maybe_sudo mkswap /swapfile
+        maybe_sudo swapon /swapfile
+        
+        # Add to fstab if not present
+        if ! grep -q "/swapfile" /etc/fstab; then
+             echo '/swapfile none swap sw 0 0' | maybe_sudo tee -a /etc/fstab > /dev/null
+        fi
+        
+        echo -e "${SUCCESS}✓${NC} Swapfile created"
+    fi
+}
+
+install_system_deps() {
+    echo -e "${WARN}→${NC} Installing system dependencies..."
     if [[ "$OS" == "macos" ]]; then
-        brew install git
+        if ! command -v git &> /dev/null; then
+            brew install git
+        fi
     elif [[ "$OS" == "linux" ]]; then
         require_sudo
         if command -v apt-get &> /dev/null; then
             maybe_sudo apt-get update -y
-            maybe_sudo apt-get install -y git
+            maybe_sudo apt-get install -y git build-essential curl
         elif command -v dnf &> /dev/null; then
-            maybe_sudo dnf install -y git
+            maybe_sudo dnf install -y git make automake gcc gcc-c++ kernel-devel curl
         elif command -v yum &> /dev/null; then
-            maybe_sudo yum install -y git
+            maybe_sudo yum install -y git make automake gcc gcc-c++ kernel-devel curl
         else
-            echo -e "${ERROR}Error: Could not detect package manager for Git${NC}"
-            exit 1
+             # Attempt to continue if git is present, else fail
+             if ! command -v git &> /dev/null; then
+                echo -e "${ERROR}Error: Could not detect package manager for Git${NC}"
+                exit 1
+             fi
         fi
     fi
-    echo -e "${SUCCESS}✓${NC} Git installed"
+    echo -e "${SUCCESS}✓${NC} System dependencies installed"
 }
 
 # Fix npm permissions for global installs (Linux)
@@ -714,10 +767,26 @@ ensure_pnpm() {
         return 0
     fi
 
+    local pnpm_installed=0
+
     if command -v corepack &> /dev/null; then
         echo -e "${WARN}→${NC} Installing pnpm via Corepack..."
         corepack enable >/dev/null 2>&1 || true
-        corepack prepare pnpm@10 --activate
+        if corepack prepare pnpm@10 --activate; then
+             # Verify it's actually on PATH
+             if command -v pnpm &> /dev/null; then
+                 pnpm_installed=1
+             else
+                 # Try to refresh hash and check again
+                 refresh_shell_command_cache
+                 if command -v pnpm &> /dev/null; then
+                     pnpm_installed=1
+                 fi
+             fi
+        fi
+    fi
+
+    if [[ "$pnpm_installed" == "1" ]]; then
         echo -e "${SUCCESS}✓${NC} pnpm installed"
         return 0
     fi
@@ -725,8 +794,26 @@ ensure_pnpm() {
     echo -e "${WARN}→${NC} Installing pnpm via npm..."
     fix_npm_permissions
     npm install -g pnpm@10
-    echo -e "${SUCCESS}✓${NC} pnpm installed"
-    return 0
+    
+    # Ensure we can find it
+    ensure_npm_global_bin_on_path
+    refresh_shell_command_cache
+
+    if command -v pnpm &> /dev/null; then
+        echo -e "${SUCCESS}✓${NC} pnpm installed"
+        return 0
+    fi
+
+    echo -e "${ERROR}Error: Failed to install pnpm.${NC}"
+    # Try one last ditch effort for the user session: alias? No, that won't help the script.
+    local npm_bin
+    npm_bin="$(npm_global_bin_dir || true)"
+    if [[ -n "$npm_bin" && -x "$npm_bin/pnpm" ]]; then
+         export PATH="$npm_bin:$PATH"
+         echo -e "${SUCCESS}✓${NC} pnpm found at $npm_bin/pnpm"
+         return 0
+    fi
+    exit 1
 }
 
 ensure_user_local_bin_on_path() {
@@ -891,9 +978,7 @@ install_openclaw_from_git() {
         echo -e "${WARN}→${NC} Installing OpenClaw from GitHub (${repo_url})..."
     fi
 
-    if ! check_git; then
-        install_git
-    fi
+    install_system_deps
 
     ensure_pnpm
 
@@ -1182,6 +1267,9 @@ EOF
     if check_existing_openclaw; then
         is_upgrade=true
     fi
+
+    ensure_swap
+
     local should_open_dashboard=false
     local skip_onboard=false
 
@@ -1217,9 +1305,7 @@ EOF
         fi
 
         # Step 3: Git (required for npm installs that may fetch from git or apply patches)
-        if ! check_git; then
-            install_git
-        fi
+        install_system_deps
 
         # Step 4: npm permissions (Linux)
         fix_npm_permissions
